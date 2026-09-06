@@ -44,9 +44,12 @@ function authHeaders() {
 async function verifyPassword() {
   try {
     const res = await fetch(`${API_BASE}/admin/verify`, { headers: authHeaders() });
+    if (res.status === 401) return false;
+    if (!res.ok) throw new Error(`Backend returned ${res.status}`);
     return res.ok;
-  } catch {
-    return false;
+  } catch (err) {
+    els.loginError.textContent = `Cannot connect to the backend at ${API_BASE}.`;
+    return null;
   }
 }
 
@@ -56,12 +59,12 @@ async function tryLogin() {
   localStorage.setItem("noir_admin_password", pw);
 
   const valid = await verifyPassword();
-  if (valid) {
+  if (valid === true) {
     await fetchProducts();
     els.loginScreen.classList.add("hidden");
     els.dashboard.classList.remove("hidden");
     els.loginError.textContent = "";
-  } else {
+  } else if (valid === false) {
     els.loginError.textContent = "Incorrect password. Try again.";
     localStorage.removeItem("noir_admin_password");
   }
