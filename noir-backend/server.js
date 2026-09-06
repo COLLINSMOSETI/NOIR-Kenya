@@ -27,9 +27,6 @@ if (!process.env.SUPABASE_URL) {
   app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 }
 
-// Admin panel (static HTML/CSS/JS) - protected by password prompt inside the panel itself
-app.use("/admin", express.static(path.join(__dirname, "admin")));
-
 // Public config the frontend needs (WhatsApp number etc.)
 app.get("/api/config", (req, res) => {
   res.json({
@@ -67,5 +64,5 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
   console.log(`NOIR backend running on http://localhost:${PORT}`);
-  console.log(`Admin panel:            http://localhost:${PORT}/admin`);
+  console.log("Admin panel:            deploy noir-frontend/admin separately");
 });

@@ -1,6 +1,9 @@
-// The admin panel is served by the backend itself, so relative URLs work
-// whether you're on localhost or your live domain.
-const API_BASE = "/api";
+const API_BASE =
+  window.NOIR_API_BASE ||
+  (window.location.protocol === "http:" || window.location.protocol === "https:"
+    ? `${window.location.origin}/api`
+    : "http://127.0.0.1:4000/api");
+const API_ORIGIN = new URL(API_BASE).origin;
 
 const els = {
   loginScreen: document.getElementById("login-screen"),
@@ -103,7 +106,7 @@ function buildFallbackImage() {
 function resolveImage(imagePath) {
   if (!imagePath) return buildFallbackImage();
   if (/^https?:\/\//i.test(imagePath)) return imagePath;
-  return imagePath.startsWith("/") ? imagePath : `/${imagePath}`;
+  return imagePath.startsWith("/") ? `${API_ORIGIN}${imagePath}` : `${API_ORIGIN}/${imagePath}`;
 }
 
 function renderInventory() {

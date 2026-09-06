@@ -30,6 +30,9 @@ window.NOIR_API_BASE = "https://your-render-service.onrender.com/api";
 - While developing locally with the default backend setup, leave this as-is.
 - Keep the backend URL ending in `/api`.
 - Configure the same Vercel origin in the backend's `CORS_ORIGIN` variable.
+- Deploy the `admin` folder separately as a second Vercel project, or serve it
+  from the same Vercel project at `/admin/`. Set its `config.js` to the Render
+  API URL before deploying.
 
 ## What's on the page
 
@@ -39,7 +42,7 @@ window.NOIR_API_BASE = "https://your-render-service.onrender.com/api";
   straight to that filtered section of the shop, with a live item count.
 - **Shop grid** with All / Clothing / Shoes / Accessories tabs, populated
   automatically from `GET /api/products`. Add, edit, restock or remove
-  items from the admin panel at the Render URL `/admin` and they
+  items from the admin panel at the deployed admin URL and they
   appear here immediately.
 - **Quick view** — clicking a product's image or name (not its buttons)
   opens a detail panel with a larger photo, description, stock, and a

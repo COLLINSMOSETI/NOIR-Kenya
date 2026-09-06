@@ -43,7 +43,8 @@ npm start
 On Windows PowerShell, if script execution policy blocks `npm`, run `npm.cmd start` instead.
 
 - API: `http://localhost:4000/api`
-- Admin panel: `http://localhost:4000/admin` (log in with `ADMIN_PASSWORD`)
+- Admin panel: deploy `../noir-frontend/admin` separately and set its
+   `config.js` to the Render API URL.
 - Uploaded/seeded images: `http://localhost:4000/uploads/...`
 
 ## Image sizing
