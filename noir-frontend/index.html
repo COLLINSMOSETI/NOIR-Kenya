@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NOIR — Style Without Noise</title>
+<meta name="description" content="NOIR is a Kenyan boutique for considered clothing, shoes and accessories. Order directly on WhatsApp or pay instantly with M-Pesa." />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="#top" class="logo">NOIR<span>.</span></a>
+      <nav class="main-nav">
+        <button data-nav="all" class="active">Shop</button>
+        <button data-nav="clothes">Clothing</button>
+        <button data-nav="shoes">Shoes</button>
+        <button data-nav="accessories">Accessories</button>
+      </nav>
+      <div class="header-actions">
+        <button class="icon-link" id="wishlist-btn" aria-label="Wishlist">
+          <svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+          <span class="count">0</span>
+        </button>
+        <button class="icon-link" id="cart-btn" aria-label="Cart">
+          <svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M6 6h15l-1.5 9h-12z"/><path d="M6 6 5 2H2"/><circle cx="9" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg>
+          <span class="count">0</span>
+        </button>
+        <a class="whatsapp-pill" href="https://wa.me/254703502267?text=Hello%20NOIR%2C%20I%20have%20a%20question." target="_blank" rel="noopener">WhatsApp Us</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero" id="top">
+    <div class="hero-text">
+      <span class="eyebrow">NOIR KENYA / NEW SEASON</span>
+      <h1>STYLE<span class="outline">WITHOUT</span>NOISE.</h1>
+      <p>Premium clothing, shoes and accessories with clean, product-focused presentation. Order directly on WhatsApp or pay instantly with M-Pesa — no accounts, no clutter.</p>
+      <a href="#shop" class="btn">Shop Collection →</a>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-collage" id="hero-collage"></div>
+      <div class="hero-rack" id="hero-rack"></div>
+    </div>
+  </section>
+
+  <section class="category-strip" id="category-strip">
+    <!-- tiles injected by JS -->
+  </section>
+
+  <section class="shop-section" id="shop">
+    <div class="shop-head">
+      <div>
+        <span class="eyebrow">The Collection</span>
+        <h2 id="shop-heading">All Products</h2>
+      </div>
+      <div class="shop-tabs">
+        <button class="shop-tab active" data-filter="all">All</button>
+        <button class="shop-tab" data-filter="clothes">Clothing</button>
+        <button class="shop-tab" data-filter="shoes">Shoes</button>
+        <button class="shop-tab" data-filter="accessories">Accessories</button>
+      </div>
+    </div>
+    <div class="product-grid" id="product-grid">
+      <div class="empty-state">Loading products…</div>
+    </div>
+  </section>
+
+  <section class="about" id="about">
+    <div class="about-inner">
+      <span class="eyebrow">About NOIR</span>
+      <h2>Fewer Pieces, Chosen Carefully.</h2>
+      <p>NOIR keeps things simple: a tight edit of clothing, shoes and accessories, honest product presentation, and two ways to buy — message us directly on WhatsApp, or pay on the spot with M-Pesa. No accounts, no clutter, just what you came for.</p>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="footer-logo">NOIR<span>.</span></div>
+    <p class="footer-meta">Order via <a href="https://wa.me/254703502267" target="_blank" rel="noopener">WhatsApp: +254 703 502 267</a> · Payments powered by M-Pesa</p>
+  </footer>
+
+  <!-- Quick view modal: product detail + related items (Jumia-style) -->
+  <div class="modal-overlay hidden" id="quickview-modal">
+    <div class="modal">
+      <button class="modal-close" id="quickview-close" aria-label="Close">&times;</button>
+      <div class="qv-body">
+        <div class="qv-media">
+          <img id="qv-image" src="" alt="" />
+        </div>
+        <div class="qv-info">
+          <span class="product-cat" id="qv-category"></span>
+          <h3 id="qv-name"></h3>
+          <div class="qv-price" id="qv-price"></div>
+          <p class="qv-desc" id="qv-desc"></p>
+          <p class="qv-stock" id="qv-stock"></p>
+          <div class="qv-actions">
+            <button class="action-btn whatsapp" id="qv-whatsapp-btn">Order via WhatsApp</button>
+            <button class="action-btn mpesa" id="qv-mpesa-btn">Pay with M-Pesa</button>
+          </div>
+        </div>
+      </div>
+      <div class="related-wrap">
+        <h4>You may also like</h4>
+        <div class="related-grid" id="related-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- M-Pesa STK push modal -->
+  <div class="modal-overlay hidden" id="mpesa-modal">
+    <div class="modal">
+      <button class="modal-close" id="modal-close" aria-label="Close">&times;</button>
+      <h3>Pay with M-Pesa</h3>
+      <p class="modal-sub" id="modal-product-name"></p>
+      <label for="modal-phone">M-Pesa phone number</label>
+      <input type="tel" id="modal-phone" placeholder="e.g. 0712345678" />
+      <button class="btn btn-accent" id="modal-pay-btn" style="width:100%;">Send payment request</button>
+      <p class="modal-status" id="modal-status"></p>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

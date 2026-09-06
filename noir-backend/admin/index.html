@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NOIR — Admin</title>
+<link rel="stylesheet" href="css/admin.css" />
+</head>
+<body>
+
+  <!-- Login gate -->
+  <div id="login-screen" class="login-screen">
+    <div class="login-card">
+      <p class="eyebrow">NOIR</p>
+      <h1>Admin access</h1>
+      <p class="muted">Enter the store password to manage products.</p>
+      <input id="password-input" type="password" placeholder="Admin password" autocomplete="current-password" />
+      <button id="login-btn">Enter</button>
+      <p id="login-error" class="error"></p>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dashboard" class="dashboard hidden">
+    <header class="admin-header">
+      <div>
+        <p class="eyebrow">NOIR</p>
+        <h1>Product manager</h1>
+      </div>
+      <button id="logout-btn" class="ghost-btn">Log out</button>
+    </header>
+
+    <section class="panel">
+      <h2 id="form-title">Add a new product</h2>
+      <form id="product-form" class="product-form">
+        <input type="hidden" id="product-id" />
+
+        <label>
+          Name
+          <input type="text" id="f-name" required placeholder="e.g. Tailored Wool Coat" />
+        </label>
+
+        <label>
+          Category
+          <select id="f-category" required>
+            <option value="clothes">Clothing</option>
+            <option value="shoes">Shoes</option>
+            <option value="accessories">Accessories</option>
+          </select>
+        </label>
+
+        <label>
+          Price (KES)
+          <input type="number" id="f-price" min="0" step="1" required placeholder="e.g. 4500" />
+        </label>
+
+        <label>
+          Stock quantity
+          <input type="number" id="f-stock" min="0" step="1" required placeholder="e.g. 10" />
+        </label>
+
+        <label class="full">
+          Description
+          <textarea id="f-description" rows="2" placeholder="Short product description"></textarea>
+        </label>
+
+        <label class="full">
+          Product image
+          <input type="file" id="f-image" accept="image/png, image/jpeg, image/webp, image/gif" />
+          <img id="image-preview" class="image-preview hidden" alt="Selected product preview" />
+          <span class="hint">JPG, PNG, WEBP or GIF up to 12MB. The image is validated, cropped and resized automatically.</span>
+        </label>
+
+        <div class="form-actions full">
+          <button type="submit" id="submit-btn">Add product</button>
+          <button type="button" id="cancel-edit-btn" class="ghost-btn hidden">Cancel edit</button>
+        </div>
+        <p id="form-error" class="error full"></p>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header-row">
+        <h2>Inventory</h2>
+        <div class="filter-tabs">
+          <button class="filter-tab active" data-filter="all">All</button>
+          <button class="filter-tab" data-filter="clothes">Clothing</button>
+          <button class="filter-tab" data-filter="shoes">Shoes</button>
+          <button class="filter-tab" data-filter="accessories">Accessories</button>
+        </div>
+      </div>
+      <div id="inventory-list" class="inventory-list">
+        <p class="muted">Loading products…</p>
+      </div>
+    </section>
+  </div>
+
+  <script src="js/admin.js"></script>
+</body>
+</html>

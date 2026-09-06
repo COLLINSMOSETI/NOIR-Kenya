@@ -1,0 +1,20 @@
+{
+  "name": "noir-backend",
+  "version": "1.0.0",
+  "description": "NOIR boutique - backend API (products, image uploads, WhatsApp ordering data, M-Pesa STK push)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "seed": "node seed.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.7",
+    "better-sqlite3": "^11.3.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "multer": "^2.0.0",
+    "sharp": "^0.35.4"
+  }
+}

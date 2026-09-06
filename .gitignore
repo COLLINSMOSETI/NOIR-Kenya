@@ -1,0 +1,7 @@
+uploads/  node_modules/ 
+.env 
+*.log 
+.DS_Store 
+noir.db-shm 
+noir.db-wal 
+uploads/ 
