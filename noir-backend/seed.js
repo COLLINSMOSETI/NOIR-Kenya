@@ -4,29 +4,49 @@
 // image for a product (or a brand new product) automatically deletes the
 // placeholder and resizes your photo to match.
 require("dotenv").config();
+const fs = require("fs");
+const path = require("path");
 const db = require("./db");
 
 const products = [
-  { name: "Tailored Wool Coat", category: "clothes", price_kes: 8500, stock: 6, image_path: "/uploads/coat-01.svg", description: "Structured double-breasted coat in charcoal wool blend." },
-  { name: "Classic Oxford Shirt", category: "clothes", price_kes: 2800, stock: 15, image_path: "/uploads/shirt-01.svg", description: "Crisp cotton oxford shirt, tailored fit." },
-  { name: "Silk Slip Dress", category: "clothes", price_kes: 5200, stock: 8, image_path: "/uploads/dress-01.svg", description: "Bias-cut silk dress with a fluid drape." },
-  { name: "Cropped Denim Jacket", category: "clothes", price_kes: 4300, stock: 10, image_path: "/uploads/jacket-01.svg", description: "Cropped jacket in washed denim with patch pockets." },
-  { name: "Merino Knit Sweater", category: "clothes", price_kes: 3600, stock: 12, image_path: "/uploads/sweater-01.svg", description: "Ribbed merino wool sweater, relaxed fit." },
-  { name: "Single-Breasted Blazer", category: "clothes", price_kes: 7200, stock: 5, image_path: "/uploads/blazer-01.svg", description: "Sharp tailored blazer for evening and office wear." },
-  { name: "Minimal Leather Sneakers", category: "shoes", price_kes: 5800, stock: 9, image_path: "/uploads/sneaker-01.svg", description: "Low-top leather sneakers in off-white." },
-  { name: "Pointed Stiletto Heels", category: "shoes", price_kes: 4900, stock: 7, image_path: "/uploads/heel-01.svg", description: "Sleek pointed-toe heels, 9cm stiletto." },
-  { name: "Suede Penny Loafers", category: "shoes", price_kes: 5400, stock: 6, image_path: "/uploads/loafer-01.svg", description: "Classic penny loafers in soft suede." },
-  { name: "Leather Chelsea Boots", category: "shoes", price_kes: 6700, stock: 8, image_path: "/uploads/boot-01.svg", description: "Ankle-height Chelsea boots with elastic side panels." },
-  { name: "Full-Grain Leather Belt", category: "accessories", price_kes: 2200, stock: 14, image_path: "/uploads/belt-01.svg", description: "Hand-finished leather belt with a brushed buckle." },
-  { name: "Classic Sunglasses", category: "accessories", price_kes: 3100, stock: 11, image_path: "/uploads/sunglasses-01.svg", description: "Acetate frame sunglasses with UV protection." },
-  { name: "Canvas Tote Bag", category: "accessories", price_kes: 2600, stock: 13, image_path: "/uploads/tote-01.svg", description: "Heavy canvas tote, reinforced handles and base." },
-  { name: "Minimalist Watch", category: "accessories", price_kes: 6200, stock: 7, image_path: "/uploads/watch-01.svg", description: "Slim stainless steel watch with a leather strap." },
+  ["Tailored Wool Coat", "clothes", 8500, 6, "coat-01.svg", "Structured double-breasted coat in charcoal wool blend."],
+  ["Classic Oxford Shirt", "clothes", 2800, 15, "shirt-01.svg", "Crisp cotton oxford shirt, tailored fit."],
+  ["Silk Slip Dress", "clothes", 5200, 8, "dress-01.svg", "Bias-cut silk dress with a fluid drape."],
+  ["Cropped Denim Jacket", "clothes", 4300, 10, "jacket-01.svg", "Cropped jacket in washed denim with patch pockets."],
+  ["Merino Knit Sweater", "clothes", 3600, 12, "sweater-01.svg", "Ribbed merino wool sweater, relaxed fit."],
+  ["Single-Breasted Blazer", "clothes", 7200, 5, "blazer-01.svg", "Sharp tailored blazer for evening and office wear."],
+  ["Minimal Leather Sneakers", "shoes", 5800, 9, "sneaker-01.svg", "Low-top leather sneakers in off-white."],
+  ["Pointed Stiletto Heels", "shoes", 4900, 7, "heel-01.svg", "Sleek pointed-toe heels, 9cm stiletto."],
+  ["Suede Penny Loafers", "shoes", 5400, 6, "loafer-01.svg", "Classic penny loafers in soft suede."],
+  ["Leather Chelsea Boots", "shoes", 6700, 8, "boot-01.svg", "Ankle-height Chelsea boots with elastic side panels."],
+  ["Full-Grain Leather Belt", "accessories", 2200, 14, "belt-01.svg", "Hand-finished leather belt with a brushed buckle."],
+  ["Classic Sunglasses", "accessories", 3100, 11, "sunglasses-01.svg", "Acetate frame sunglasses with UV protection."],
+  ["Canvas Tote Bag", "accessories", 2600, 13, "tote-01.svg", "Heavy canvas tote, reinforced handles and base."],
+  ["Minimalist Watch", "accessories", 6200, 7, "watch-01.svg", "Slim stainless steel watch with a leather strap."],
 ];
 
-const insert = db.prepare(`
-  INSERT INTO products (name, category, description, price_kes, stock, image_path)
-  VALUES (@name, @category, @description, @price_kes, @stock, @image_path)
-`);
+async function imagePath(filename) {
+  if (!db.useSupabase) return `/uploads/${filename}`;
+  const file = path.join(__dirname, "uploads", filename);
+  const { error } = await db.supabase.storage.from("product-images").upload(filename, fs.readFileSync(file), { contentType: "image/svg+xml", upsert: true });
+  if (error) throw error;
+  return db.supabase.storage.from("product-images").getPublicUrl(filename).data.publicUrl;
+}
+
+(async () => {
+  const existing = await db.countProducts();
+  if (existing > 0) {
+    console.log(`Database already has ${existing} product(s) - skipping seed.`);
+    return;
+  }
+  for (const [name, category, price_kes, stock, filename, description] of products) {
+    await db.insertProduct({ name, category, price_kes, stock, description, image_path: await imagePath(filename) });
+  }
+  console.log(`Seeded ${products.length} demo products.`);
+})().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
 
 const existing = db.prepare("SELECT COUNT(*) AS c FROM products").get();
 if (existing.c > 0) {

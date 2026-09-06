@@ -10,7 +10,7 @@ const mpesaRouter = require("./routes/mpesa");
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-const allowedOrigins = (process.env.CORS_ORIGIN || "*")
+const allowedOrigins = (process.env.CORS_ORIGIN || "http://localhost:5500,http://127.0.0.1:5500")
   .split(",")
   .map((s) => s.trim());
 
@@ -22,11 +22,10 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Public storefront
-app.use(express.static(path.join(__dirname, "..", "noir-frontend")));
-
 // Product images (both seeded placeholder art and admin uploads live here)
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+if (!process.env.SUPABASE_URL) {
+  app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+}
 
 // Admin panel (static HTML/CSS/JS) - protected by password prompt inside the panel itself
 app.use("/admin", express.static(path.join(__dirname, "admin")));

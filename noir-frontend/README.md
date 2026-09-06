@@ -21,15 +21,15 @@ python3 -m http.server 5500
 
 ## Connecting to the backend
 
-Open `js/main.js` and check the first line:
+Open `config.js` and set the public Render API URL:
 
 ```js
-const API_BASE = "http://localhost:4000/api";
+window.NOIR_API_BASE = "https://your-render-service.onrender.com/api";
 ```
 
 - While developing locally with the default backend setup, leave this as-is.
-- When you deploy the backend somewhere public, change this to that URL,
-  e.g. `https://api.yournoirstore.com/api`.
+- Keep the backend URL ending in `/api`.
+- Configure the same Vercel origin in the backend's `CORS_ORIGIN` variable.
 
 ## What's on the page
 
@@ -39,7 +39,7 @@ const API_BASE = "http://localhost:4000/api";
   straight to that filtered section of the shop, with a live item count.
 - **Shop grid** with All / Clothing / Shoes / Accessories tabs, populated
   automatically from `GET /api/products`. Add, edit, restock or remove
-  items from the admin panel at `http://localhost:4000/admin` and they
+  items from the admin panel at the Render URL `/admin` and they
   appear here immediately.
 - **Quick view** — clicking a product's image or name (not its buttons)
   opens a detail panel with a larger photo, description, stock, and a

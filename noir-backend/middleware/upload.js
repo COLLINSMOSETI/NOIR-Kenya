@@ -3,6 +3,7 @@ const sharp = require("sharp");
 const path = require("path");
 const fs = require("fs");
 const crypto = require("crypto");
+const { supabase, useSupabase } = require("../db");
 
 const UPLOAD_DIR = path.join(__dirname, "..", "uploads");
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
@@ -45,16 +46,28 @@ async function resizeAndSave(req, res, next) {
     const filename = `${Date.now()}-${crypto.randomBytes(4).toString("hex")}.webp`;
     const outPath = path.join(UPLOAD_DIR, filename);
 
-    await sharp(req.file.buffer)
+    const image = sharp(req.file.buffer)
       .resize(dims.width, dims.height, {
         fit: "cover", // crop to exactly match existing product image dimensions
         position: "centre",
       })
-      .flatten({ background: "#F4F1EA" }) // NOIR canvas colour behind any transparency
-      .webp({ quality: 88 })
-      .toFile(outPath);
+      .flatten({ background: "#F4F1EA" })
+      .webp({ quality: 88 });
 
-    req.processedImagePath = `/uploads/${filename}`;
+    if (useSupabase) {
+      const buffer = await image.toBuffer();
+      const { error } = await supabase.storage.from("product-images").upload(filename, buffer, {
+        contentType: "image/webp",
+        upsert: true,
+      });
+      if (error) throw error;
+      const { data } = supabase.storage.from("product-images").getPublicUrl(filename);
+      req.processedImagePath = data.publicUrl;
+    } else {
+      await image.toFile(outPath);
+      req.processedImagePath = `/uploads/${filename}`;
+    }
+
     next();
   } catch (err) {
     next(err);

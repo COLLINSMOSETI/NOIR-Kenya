@@ -16,9 +16,10 @@ Open `.env` and set:
 
 - `ADMIN_PASSWORD` — the password you'll use to log into `/admin`.
 - `WHATSAPP_NUMBER` — already set to `254703502267` (no `+`, no spaces).
-- `CORS_ORIGIN` — defaults to `*`, which lets the frontend work whether you
-  open `index.html` directly as a file or serve it from any dev server.
-  Tighten this to your real domain once you deploy.
+- `CORS_ORIGIN` — comma-separated frontend origins, including your Vercel URL.
+- `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` — required in production for
+   durable database and image storage on Supabase. Never expose the service role
+   key in the frontend.
 - The `MPESA_*` values — see the M-Pesa section below. The site works fine
   without these; only the "Pay with M-Pesa" button needs them.
 
@@ -96,10 +97,25 @@ friendly "payment isn't set up yet" message instead of failing silently.
 
 ## Deploying
 
-Any Node host works (Render, Railway, a VPS, etc.). Make sure to:
+### Separate Render + Vercel + Supabase deployment
+
+1. In Supabase SQL Editor, run [`supabase/schema.sql`](supabase/schema.sql).
+2. Deploy `noir-backend` to Render as a Node web service. Set its root
+   directory to `noir-backend`, build command to `npm install`, and start
+   command to `npm start`. Add the values from `.env.example`, including the
+   Supabase service-role key and your Vercel URL in `CORS_ORIGIN`.
+3. Run `npm run seed` once against the Render environment, or run it locally
+   with the production Supabase variables, to upload the starter products and
+   placeholder images.
+4. In `noir-frontend/config.js`, set `window.NOIR_API_BASE` to the Render API
+   URL ending in `/api`, then deploy the `noir-frontend` folder to Vercel.
+5. Open the Vercel site. Product changes made in the Render admin panel are
+   read from Supabase whenever the storefront loads.
+
+Any Node host works (Render, Railway, a VPS, etc.). For production:
 
 - Set all the same environment variables from `.env` on the host.
-- Persist the `uploads/` folder and `noir.db` file between deploys (use a
-  volume/disk — they are not committed to git).
+- Use Supabase rather than the local SQLite database and `uploads/` folder;
+   Render's local filesystem is ephemeral.
 - Point `MPESA_CALLBACK_URL` at your real deployed domain.
 - Update `CORS_ORIGIN` to your deployed frontend's URL.

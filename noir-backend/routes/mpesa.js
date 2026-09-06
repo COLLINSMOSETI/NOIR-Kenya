@@ -81,10 +81,15 @@ router.post("/stkpush", async (req, res) => {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
 
-    db.prepare(
-      `INSERT INTO orders (product_id, product_name, amount_kes, phone, checkout_request_id, merchant_request_id, status)
-       VALUES (?, ?, ?, ?, ?, ?, 'PENDING')`
-    ).run(productId || null, productName || null, Math.round(Number(amount)), phoneNumber, data.CheckoutRequestID, data.MerchantRequestID);
+    await db.insertOrder({
+      product_id: productId || null,
+      product_name: productName || null,
+      amount_kes: Math.round(Number(amount)),
+      phone: phoneNumber,
+      checkout_request_id: data.CheckoutRequestID,
+      merchant_request_id: data.MerchantRequestID,
+      status: "PENDING",
+    });
 
     res.json({
       success: true,
@@ -101,14 +106,12 @@ router.post("/stkpush", async (req, res) => {
 });
 
 // ---------- Safaricom calls this URL with the payment result ----------
-router.post("/callback", (req, res) => {
+router.post("/callback", async (req, res) => {
   try {
     const stk = req.body?.Body?.stkCallback;
     if (stk) {
       const status = stk.ResultCode === 0 ? "SUCCESS" : "FAILED";
-      db.prepare(
-        `UPDATE orders SET status = ?, result_description = ? WHERE checkout_request_id = ?`
-      ).run(status, stk.ResultDesc, stk.CheckoutRequestID);
+      await db.updateOrderStatus(stk.CheckoutRequestID, status, stk.ResultDesc);
       console.log(`M-Pesa callback: ${stk.CheckoutRequestID} -> ${status} (${stk.ResultDesc})`);
     }
   } catch (err) {
@@ -119,12 +122,12 @@ router.post("/callback", (req, res) => {
 });
 
 // ---------- Admin: check status of an order by CheckoutRequestID ----------
-router.get("/status/:checkoutRequestId", (req, res) => {
-  const order = db
-    .prepare("SELECT * FROM orders WHERE checkout_request_id = ?")
-    .get(req.params.checkoutRequestId);
+router.get("/status/:checkoutRequestId", async (req, res, next) => {
+  try {
+  const order = await db.getOrder(req.params.checkoutRequestId);
   if (!order) return res.status(404).json({ error: "Order not found" });
   res.json(order);
+  } catch (err) { next(err); }
 });
 
 module.exports = router;

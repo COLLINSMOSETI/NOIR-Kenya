@@ -29,23 +29,24 @@ function validateProductFields(body, requireImage) {
 }
 
 // ---------- Public: list products (optionally filtered by category) ----------
-router.get("/", (req, res) => {
+router.get("/", async (req, res, next) => {
+  try {
   const { category } = req.query;
-  const rows = category
-    ? db.prepare("SELECT * FROM products WHERE category = ? ORDER BY created_at DESC").all(category)
-    : db.prepare("SELECT * FROM products ORDER BY created_at DESC").all();
-  res.json(rows);
+  res.json(await db.listProducts(category));
+  } catch (err) { next(err); }
 });
 
 // ---------- Public: single product ----------
-router.get("/:id", (req, res) => {
-  const row = db.prepare("SELECT * FROM products WHERE id = ?").get(req.params.id);
+router.get("/:id", async (req, res, next) => {
+  try {
+  const row = await db.getProduct(req.params.id);
   if (!row) return res.status(404).json({ error: "Product not found" });
   res.json(row);
+  } catch (err) { next(err); }
 });
 
 // ---------- Admin: create product with image ----------
-router.post("/", adminAuth, upload.single("image"), resizeAndSave, (req, res) => {
+router.post("/", adminAuth, upload.single("image"), resizeAndSave, async (req, res, next) => {
   try {
     const { name, category, description = "", price_kes, stock } = req.body;
 
@@ -63,24 +64,17 @@ router.post("/", adminAuth, upload.single("image"), resizeAndSave, (req, res) =>
       return res.status(400).json({ error: validationError });
     }
 
-    const info = db
-      .prepare(
-        `INSERT INTO products (name, category, description, price_kes, stock, image_path)
-         VALUES (?, ?, ?, ?, ?, ?)`
-      )
-      .run(name, category, description, Number(price_kes), Number(stock) || 0, req.processedImagePath);
-
-    const product = db.prepare("SELECT * FROM products WHERE id = ?").get(info.lastInsertRowid);
+    const product = await db.insertProduct({ name, category, description, price_kes: Number(price_kes), stock: Number(stock) || 0, image_path: req.processedImagePath });
     res.status(201).json(product);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Could not create product" });
+    next(err);
   }
 });
 
 // ---------- Admin: update product fields (name/price/description/category), optionally replace image ----------
-router.put("/:id", adminAuth, upload.single("image"), resizeAndSave, (req, res) => {
-  const existing = db.prepare("SELECT * FROM products WHERE id = ?").get(req.params.id);
+router.put("/:id", adminAuth, upload.single("image"), resizeAndSave, async (req, res, next) => {
+  try {
+  const existing = await db.getProduct(req.params.id);
   if (!existing) return res.status(404).json({ error: "Product not found" });
 
   const {
@@ -104,9 +98,7 @@ router.put("/:id", adminAuth, upload.single("image"), resizeAndSave, (req, res) 
 
   const image_path = req.processedImagePath || existing.image_path;
 
-  db.prepare(
-    `UPDATE products SET name = ?, category = ?, description = ?, price_kes = ?, stock = ?, image_path = ? WHERE id = ?`
-  ).run(name, category, description, Number(price_kes), Number(stock), image_path, req.params.id);
+  const product = await db.updateProduct(req.params.id, { name, category, description, price_kes: Number(price_kes), stock: Number(stock), image_path });
 
   // If a new image replaced the old one, remove the old file (skip placeholder art on first-run seed).
   if (req.processedImagePath && existing.image_path !== req.processedImagePath) {
@@ -114,33 +106,40 @@ router.put("/:id", adminAuth, upload.single("image"), resizeAndSave, (req, res) 
     fs.unlink(oldFile, () => {});
   }
 
-  res.json(db.prepare("SELECT * FROM products WHERE id = ?").get(req.params.id));
+  res.json(product);
+  
+  } catch (err) {
+    next(err);
+  }
 });
 
 // ---------- Admin: update stock only (quick +/- from the admin table) ----------
-router.put("/:id/stock", adminAuth, (req, res) => {
+router.put("/:id/stock", adminAuth, async (req, res, next) => {
+  try {
   const { stock } = req.body;
   if (stock === undefined || Number(stock) < 0) {
     return res.status(400).json({ error: "A valid non-negative stock number is required" });
   }
-  const existing = db.prepare("SELECT * FROM products WHERE id = ?").get(req.params.id);
+  const existing = await db.getProduct(req.params.id);
   if (!existing) return res.status(404).json({ error: "Product not found" });
 
-  db.prepare("UPDATE products SET stock = ? WHERE id = ?").run(Number(stock), req.params.id);
-  res.json(db.prepare("SELECT * FROM products WHERE id = ?").get(req.params.id));
+  res.json(await db.updateStock(req.params.id, Number(stock)));
+  } catch (err) { next(err); }
 });
 
 // ---------- Admin: delete product ----------
-router.delete("/:id", adminAuth, (req, res) => {
-  const existing = db.prepare("SELECT * FROM products WHERE id = ?").get(req.params.id);
+router.delete("/:id", adminAuth, async (req, res, next) => {
+  try {
+  const existing = await db.getProduct(req.params.id);
   if (!existing) return res.status(404).json({ error: "Product not found" });
 
-  db.prepare("DELETE FROM products WHERE id = ?").run(req.params.id);
+  await db.deleteProduct(req.params.id);
 
   const filePath = path.join(UPLOAD_DIR, path.basename(existing.image_path));
   fs.unlink(filePath, () => {}); // best-effort cleanup, ignore if already gone
 
   res.json({ success: true });
+  } catch (err) { next(err); }
 });
 
 module.exports = router;

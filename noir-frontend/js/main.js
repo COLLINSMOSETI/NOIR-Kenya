@@ -4,9 +4,9 @@
 // resolution issues while keeping a single override for deployment.
 const API_BASE =
   window.NOIR_API_BASE ||
-  (window.location.hostname === "localhost"
+  (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
     ? "http://127.0.0.1:4000/api"
-    : "http://localhost:4000/api");
+    : `${window.location.origin}/api`);
 
 let WHATSAPP_NUMBER = "254703502267"; // overwritten by /api/config on load
 let allProducts = [];
@@ -391,4 +391,5 @@ document.getElementById("cart-btn").addEventListener("click", () => {
 (async function init() {
   await loadConfig();
   await loadProducts();
+  setInterval(loadProducts, 30000);
 })();
