@@ -45,10 +45,15 @@ async function verifyPassword() {
   try {
     const res = await fetch(`${API_BASE}/admin/verify`, { headers: authHeaders() });
     if (res.status === 401) return false;
-    if (!res.ok) throw new Error(`Backend returned ${res.status}`);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || `Backend returned ${res.status}`);
+    }
     return res.ok;
   } catch (err) {
-    els.loginError.textContent = `Cannot connect to the backend at ${API_BASE}.`;
+    els.loginError.textContent = err.message === "Failed to fetch"
+      ? `Cannot connect to the backend at ${API_BASE}.`
+      : err.message;
     return null;
   }
 }
