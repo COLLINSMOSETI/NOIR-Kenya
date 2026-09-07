@@ -42,8 +42,13 @@ function authHeaders() {
 
 // ---------- Login ----------
 async function verifyPassword() {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20000);
   try {
-    const res = await fetch(`${API_BASE}/admin/verify`, { headers: authHeaders() });
+    const res = await fetch(`${API_BASE}/admin/verify`, {
+      headers: authHeaders(),
+      signal: controller.signal,
+    });
     if (res.status === 401) return false;
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
@@ -51,27 +56,36 @@ async function verifyPassword() {
     }
     return res.ok;
   } catch (err) {
-    els.loginError.textContent = err.message === "Failed to fetch"
+    els.loginError.textContent = err.name === "AbortError" || err.message === "Failed to fetch"
       ? `Cannot connect to the backend at ${API_BASE}.`
       : err.message;
     return null;
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
 async function tryLogin() {
   const pw = els.passwordInput.value.trim();
   if (!pw) return;
+  els.loginBtn.disabled = true;
+  els.loginBtn.textContent = "Checking...";
+  els.loginError.textContent = "";
   localStorage.setItem("noir_admin_password", pw);
 
-  const valid = await verifyPassword();
-  if (valid === true) {
-    await fetchProducts();
-    els.loginScreen.classList.add("hidden");
-    els.dashboard.classList.remove("hidden");
-    els.loginError.textContent = "";
-  } else if (valid === false) {
-    els.loginError.textContent = "Incorrect password. Try again.";
-    localStorage.removeItem("noir_admin_password");
+  try {
+    const valid = await verifyPassword();
+    if (valid === true) {
+      await fetchProducts();
+      els.loginScreen.classList.add("hidden");
+      els.dashboard.classList.remove("hidden");
+    } else if (valid === false) {
+      els.loginError.textContent = "Incorrect password. Try again.";
+      localStorage.removeItem("noir_admin_password");
+    }
+  } finally {
+    els.loginBtn.disabled = false;
+    els.loginBtn.textContent = "Enter";
   }
 }
 
