@@ -16,7 +16,17 @@ const allowedOrigins = (process.env.CORS_ORIGIN || "http://localhost:5500,http:/
 
 app.use(
   cors({
-    origin: allowedOrigins.includes("*") ? true : allowedOrigins,
+    origin(origin, callback) {
+      // Browsers omit Origin for same-origin and local file requests.
+      if (!origin || allowedOrigins.includes("*") || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      // Allow Vercel production, preview, and branch deployments.
+      if (/^https:\/\/[^/]+\.vercel\.app$/.test(origin)) {
+        return callback(null, true);
+      }
+      callback(new Error("Origin is not allowed by CORS"));
+    },
   })
 );
 app.use(express.json());
