@@ -26,7 +26,6 @@ const products = [
 ];
 
 async function imagePath(filename) {
-  if (!db.useSupabase) return `/uploads/${filename}`;
   const file = path.join(__dirname, "uploads", filename);
   const { error } = await db.supabase.storage.from("product-images").upload(filename, fs.readFileSync(file), { contentType: "image/svg+xml", upsert: true });
   if (error) throw error;
@@ -47,12 +46,3 @@ async function imagePath(filename) {
   console.error(error);
   process.exitCode = 1;
 });
-
-const existing = db.prepare("SELECT COUNT(*) AS c FROM products").get();
-if (existing.c > 0) {
-  console.log(`Database already has ${existing.c} product(s) - skipping seed. Delete noir.db to reseed from scratch.`);
-} else {
-  const insertMany = db.transaction((rows) => rows.forEach((r) => insert.run(r)));
-  insertMany(products);
-  console.log(`Seeded ${products.length} demo products.`);
-}

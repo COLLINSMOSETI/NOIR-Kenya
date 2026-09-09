@@ -5,3 +5,5 @@ uploads/  node_modules/
 noir.db-shm 
 noir.db-wal 
 uploads/ 
+.vercel
+.env*

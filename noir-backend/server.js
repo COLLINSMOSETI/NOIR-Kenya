@@ -1,7 +1,6 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const path = require("path");
 const multer = require("multer");
 
 const productsRouter = require("./routes/products");
@@ -31,11 +30,6 @@ app.use(
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Product images (both seeded placeholder art and admin uploads live here)
-if (!process.env.SUPABASE_URL) {
-  app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-}
 
 // Public config the frontend needs (WhatsApp number etc.)
 app.get("/api/config", (req, res) => {

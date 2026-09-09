@@ -14,9 +14,13 @@ let currentFilter = "all";
 
 const CATEGORY_LABELS = {
   clothes: "Clothing",
+  mens_clothing: "Men's Clothing",
+  womens_clothing: "Women's Clothing",
   shoes: "Shoes",
   accessories: "Accessories",
 };
+
+const CLOTHING_CATEGORIES = new Set(["clothes", "mens_clothing", "womens_clothing"]);
 
 const grid = document.getElementById("product-grid");
 const shopHeading = document.getElementById("shop-heading");
@@ -83,23 +87,13 @@ function escapeHtml(str) {
 
 // ---------------- Hero visuals (built from real product images) ----------------
 function renderHero() {
-  const clothes = allProducts.filter((p) => p.category === "clothes");
-  const shoesOrAcc = allProducts.filter((p) => p.category !== "clothes");
-
-  const collageItems = clothes.slice(0, 4);
-  heroCollage.innerHTML = collageItems
-    .map((p) => `<img src="${resolveImage(p.image_path)}" alt="${escapeHtml(p.name)}" />`)
-    .join("");
-
-  const rackItems = (clothes.length ? clothes : allProducts).slice(0, 3);
-  heroRack.innerHTML = rackItems
-    .map((p) => `<img src="${resolveImage(p.image_path)}" alt="${escapeHtml(p.name)}" />`)
-    .join("");
+  heroCollage.innerHTML = "";
+  heroRack.innerHTML = "";
 }
 
 // ---------------- Category tile strip ----------------
 function renderCategoryTiles() {
-  const cats = ["clothes", "shoes", "accessories"];
+  const cats = ["mens_clothing", "womens_clothing", "shoes", "accessories"];
   categoryStrip.innerHTML = cats
     .map((cat) => {
       const items = allProducts.filter((p) => p.category === cat);
@@ -136,7 +130,7 @@ function renderGrid() {
 
 function productCardHtml(p) {
   const soldOut = p.stock <= 0;
-  const mediaClass = p.category === "clothes" ? "product-media" : "product-media square";
+  const mediaClass = CLOTHING_CATEGORIES.has(p.category) ? "product-media" : "product-media square";
   return `
     <div class="product-card" data-id="${p.id}">
       <div class="${mediaClass}" data-open-quickview="${p.id}">

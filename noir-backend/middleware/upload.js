@@ -1,18 +1,15 @@
 const multer = require("multer");
 const sharp = require("sharp");
-const path = require("path");
-const fs = require("fs");
 const crypto = require("crypto");
-const { supabase, useSupabase } = require("../db");
-
-const UPLOAD_DIR = path.join(__dirname, "..", "uploads");
-if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+const { supabase } = require("../db");
 
 // Standard dimensions so every product image on the site is the same size,
 // no matter what size photo the admin uploads. Matches the placeholder art
 // already shipped in /uploads.
 const DIMENSIONS = {
   clothes: { width: 1000, height: 1250 }, // portrait, 4:5 - matches hanger illustrations
+  mens_clothing: { width: 1000, height: 1250 },
+  womens_clothing: { width: 1000, height: 1250 },
   shoes: { width: 1000, height: 1000 }, // square
   accessories: { width: 1000, height: 1000 }, // square
 };
@@ -44,7 +41,6 @@ async function resizeAndSave(req, res, next) {
     const dims = DIMENSIONS[category] || DIMENSIONS.clothes;
 
     const filename = `${Date.now()}-${crypto.randomBytes(4).toString("hex")}.webp`;
-    const outPath = path.join(UPLOAD_DIR, filename);
 
     const image = sharp(req.file.buffer)
       .resize(dims.width, dims.height, {
@@ -54,19 +50,14 @@ async function resizeAndSave(req, res, next) {
       .flatten({ background: "#F4F1EA" })
       .webp({ quality: 88 });
 
-    if (useSupabase) {
-      const buffer = await image.toBuffer();
-      const { error } = await supabase.storage.from("product-images").upload(filename, buffer, {
-        contentType: "image/webp",
-        upsert: true,
-      });
-      if (error) throw error;
-      const { data } = supabase.storage.from("product-images").getPublicUrl(filename);
-      req.processedImagePath = data.publicUrl;
-    } else {
-      await image.toFile(outPath);
-      req.processedImagePath = `/uploads/${filename}`;
-    }
+    const buffer = await image.toBuffer();
+    const { error } = await supabase.storage.from("product-images").upload(filename, buffer, {
+      contentType: "image/webp",
+      upsert: true,
+    });
+    if (error) throw error;
+    const { data } = supabase.storage.from("product-images").getPublicUrl(filename);
+    req.processedImagePath = data.publicUrl;
 
     next();
   } catch (err) {
@@ -74,4 +65,4 @@ async function resizeAndSave(req, res, next) {
   }
 }
 
-module.exports = { upload, resizeAndSave, DIMENSIONS, UPLOAD_DIR };
+module.exports = { upload, resizeAndSave, DIMENSIONS };

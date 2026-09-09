@@ -47,6 +47,21 @@ On Windows PowerShell, if script execution policy blocks `npm`, run `npm.cmd sta
    `config.js` to the Render API URL.
 - Uploaded/seeded images: `http://localhost:4000/uploads/...`
 
+## Import the NOIR image catalog
+
+Before importing the supplied catalog, run
+[`supabase/migrations/20260909_expand_clothing_categories.sql`](supabase/migrations/20260909_expand_clothing_categories.sql)
+in the Supabase SQL Editor. Then run:
+
+```bash
+npm run import-images
+```
+
+The importer uploads the JPGs from `../noir images`, creates idempotent product
+records in Supabase Storage and `products`, assigns men's clothing, women's
+clothing, shoes or accessories, and sets a KES price and starting stock. It is
+safe to rerun after an interrupted import.
+
 ## Image sizing
 
 Every product image is cropped and resized on upload so the whole catalogue

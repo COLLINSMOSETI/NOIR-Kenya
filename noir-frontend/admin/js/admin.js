@@ -32,6 +32,14 @@ const els = {
 let currentFilter = "all";
 let allProducts = [];
 
+const CATEGORY_LABELS = {
+  clothes: "Other Clothing",
+  mens_clothing: "Men's Clothing",
+  womens_clothing: "Women's Clothing",
+  shoes: "Shoes",
+  accessories: "Accessories",
+};
+
 function getPassword() {
   return localStorage.getItem("noir_admin_password") || "";
 }
@@ -147,7 +155,7 @@ function renderInventory() {
         <img src="${resolveImage(p.image_path)}" alt="${escapeHtml(p.name)}" onerror="this.onerror=null;this.src='${buildFallbackImage()}';" />
         <div class="inventory-meta">
           <div class="name">${escapeHtml(p.name)}</div>
-          <div class="sub">${p.category} · stock ${p.stock}</div>
+          <div class="sub">${CATEGORY_LABELS[p.category] || p.category} · stock ${p.stock}</div>
         </div>
         <div class="inventory-price">KES ${Number(p.price_kes).toLocaleString()}</div>
         <div class="stock-control">

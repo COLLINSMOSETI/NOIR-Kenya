@@ -1,12 +1,11 @@
 const express = require("express");
-const fs = require("fs");
 const path = require("path");
 const db = require("../db");
 const adminAuth = require("../middleware/adminAuth");
-const { upload, resizeAndSave, UPLOAD_DIR } = require("../middleware/upload");
+const { upload, resizeAndSave } = require("../middleware/upload");
 
 const router = express.Router();
-const CATEGORIES = new Set(["clothes", "shoes", "accessories"]);
+const CATEGORIES = new Set(["clothes", "mens_clothing", "womens_clothing", "shoes", "accessories"]);
 
 function validateProductFields(body, requireImage) {
   const name = String(body.name || "").trim();
@@ -59,7 +58,7 @@ router.post("/", adminAuth, upload.single("image"), resizeAndSave, async (req, r
     );
     if (validationError) {
       if (req.processedImagePath) {
-        fs.unlink(path.join(UPLOAD_DIR, path.basename(req.processedImagePath)), () => {});
+        await db.removeImage(path.basename(req.processedImagePath));
       }
       return res.status(400).json({ error: validationError });
     }
@@ -91,7 +90,7 @@ router.put("/:id", adminAuth, upload.single("image"), resizeAndSave, async (req,
   );
   if (validationError) {
     if (req.processedImagePath) {
-      fs.unlink(path.join(UPLOAD_DIR, path.basename(req.processedImagePath)), () => {});
+      await db.removeImage(path.basename(req.processedImagePath));
     }
     return res.status(400).json({ error: validationError });
   }
@@ -102,8 +101,9 @@ router.put("/:id", adminAuth, upload.single("image"), resizeAndSave, async (req,
 
   // If a new image replaced the old one, remove the old file (skip placeholder art on first-run seed).
   if (req.processedImagePath && existing.image_path !== req.processedImagePath) {
-    const oldFile = path.join(UPLOAD_DIR, path.basename(existing.image_path));
-    fs.unlink(oldFile, () => {});
+    if (/^https?:\/\//i.test(existing.image_path)) {
+      await db.removeImage(path.basename(new URL(existing.image_path).pathname));
+    }
   }
 
   res.json(product);
@@ -135,8 +135,9 @@ router.delete("/:id", adminAuth, async (req, res, next) => {
 
   await db.deleteProduct(req.params.id);
 
-  const filePath = path.join(UPLOAD_DIR, path.basename(existing.image_path));
-  fs.unlink(filePath, () => {}); // best-effort cleanup, ignore if already gone
+  if (/^https?:\/\//i.test(existing.image_path)) {
+    await db.removeImage(path.basename(new URL(existing.image_path).pathname));
+  }
 
   res.json({ success: true });
   } catch (err) { next(err); }
